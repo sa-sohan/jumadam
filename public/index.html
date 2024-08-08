@@ -358,7 +358,7 @@
         }
 
         function fetchFortuneQuestions() {
-            return fetch('/fortune-questions')
+            return fetch('/uploads/fortune_answers.json')
                 .then(response => response.json())
                 .then(data => {
                     fortuneQuestions = data;
@@ -371,7 +371,7 @@
         }
 
         function fetchMBTIQuestions() {
-            return fetch('/mbti-questions')
+            return fetch('/uploads/mbti_answers.json')
                 .then(response => response.json())
                 .then(data => {
                     mbtiQuestions = data;
