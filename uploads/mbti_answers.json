@@ -1,1 +1,10 @@
-[]
+[
+    {
+      "question": "MBTI 질문1",
+      "choices": ["선택1", "선택2"]
+    },
+    {
+      "question": "MBTI 질문2",
+      "choices": ["선택1", "선택2"]
+    }
+  ]
