@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>주마담</title>
+    <title>주마담 소개팅 신청</title>
     <style>
         body, html {
             margin: 0;
@@ -329,7 +329,7 @@
         }
 
         function loadHomeDesign() {
-            fetch('/uploads/home_design.json')
+            fetch('/getHomeDesign')
                 .then(response => response.json())
                 .then(data => {
                     if (data.characterImage) {
@@ -840,7 +840,7 @@
             choicesContainer.innerHTML = "";
         }
 
-        fetch('/uploads/design.json')
+        fetch('/getDesign')
             .then(response => response.json())
             .then(data => {
                 if (data.backgroundImage) {
