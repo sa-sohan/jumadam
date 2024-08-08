@@ -6,10 +6,12 @@ const { body, validationResult } = require('express-validator');
 const moment = require('moment-timezone');
 const multer = require('multer');
 const path = require('path');
+const cors = require('cors');
 
 const app = express();
 const PORT = process.env.PORT || 8001;
 
+app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
@@ -470,10 +472,14 @@ app.post('/saveDatingApplication', async (req, res) => {
     }
 });
 
+app.get('/test', (req, res) => {
+    res.json({ message: 'Test successful' });
+});
+
 // 에러 핸들링 미들웨어
 app.use((err, req, res, next) => {
     console.error(err.stack);
-    res.status(500).send('Something broke!');
+    res.status(500).json({ message: 'Something went wrong!', error: err.message });
 });
 
 // 모든 요청을 React 앱으로 전달
