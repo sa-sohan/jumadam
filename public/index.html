@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>주마담</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Nanum Gothic', Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        body {
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .logo {
+            max-width: 150px;
+            max-height: 60px;
+            cursor: pointer;
+        }
+        .menu {
+            display: flex;
+            gap: 20px;
+        }
+        .menu-item {
+            color: #333;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .menu-item:hover {
+            background-color: #e0e0e0;
+        }
+        .main-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .content-container {
+            background-color: rgba(255, 255, 255, 0.25);
+            width: 100%;
+            max-width: none;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .character-container {
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 20px;
+        }
+        .character-image {
+            width: 100%;
+            height: auto;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+        .content {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .speech-bubble {
+            position: relative;
+            background: #fff;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            font-size: 16px;
+            line-height: 1.5;
+            text-align: center;
+            width: 100%;
+        }
+        .speech-bubble:after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border: 15px solid transparent;
+            border-bottom-color: #fff;
+            border-top: 0;
+            margin-left: -15px;
+            margin-top: -15px;
+        }
+        .choices {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            width: 100%;
+        }
+        .choice-button, .submit-button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+            font-size: 16px;
+        }
+        .choice-button:hover, .submit-button:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
+        }
+        .input-field {
+            padding: 10px;
+            width: 100%;
+            max-width: 300px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        .fortune-result, .mbti-result {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            font-size: 16px;
+            max-width: 100%;
+            overflow-wrap: break-word;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .mbti-result {
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: 15px;
+            text-align: center;
+            max-width: 300px;
+            width: 90%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .mbti-result-text {
+            font-size: 16px;
+            line-height: 1.5;
+            color: #333;
+            margin-bottom: 8px;
+            white-space: pre-wrap;
+            text-align: left;
+        }
+        .mbti-result p {
+            font-size: 14px;
+            line-height: 1.3;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        @media (max-width: 600px) {
+            .header {
+                flex-direction: column;
+                align-items: center;
+            }
+            .menu {
+                margin-top: 15px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .logo {
+                max-width: 120px;
+                max-height: 48px;
+            }
+            .menu-item {
+                font-size: 14px;
+                padding: 5px 8px;
+            }
+            .content-container {
+                padding: 20px;
+            }
+            .speech-bubble, .fortune-result, .mbti-result {
+                font-size: 14px;
+                padding: 15px;
+            }
+            .choice-button, .submit-button {
+                font-size: 14px;
+                padding: 8px 16px;
+            }
+            .input-field {
+                font-size: 14px;
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img id="logo" class="logo" src="" alt="주마담 로고">
+        <div class="menu">
+            <a class="menu-item" onclick="showHome()">홈</a>
+            <a class="menu-item" onclick="showDatingApplication()">소개팅 신청하기</a>
+            <a class="menu-item" onclick="showFortune()">사주&운세</a>
+            <a class="menu-item" onclick="showMBTI()">MBTI 테스트</a>
+        </div>
+    </div>
+    <div class="main-container">
+        <div id="home-content" class="content-container" style="display: none;">
+            <div class="container">
+                <div class="character-container">
+                    <img id="home-character-image" class="character-image" alt="홈 캐릭터">
+                </div>
+                <div class="content">
+                    <div id="home-speech-bubble" class="speech-bubble"></div>
+                </div>
+            </div>
+        </div>
+        <div id="dating-content" class="content-container" style="display: none;">
+            <div class="container">
+                <div class="character-container">
+                    <img id="character-image" class="character-image" alt="주마담 캐릭터">
+                </div>
+                <div class="content">
+                    <div id="question" class="speech-bubble"></div>
+                    <div id="choices" class="choices"></div>
+                </div>
+            </div>
+        </div>
+        <div id="fortune-content" class="content-container" style="display: none;">
+            <div class="container">
+                <div class="character-container">
+                    <img id="fortune-character-image" class="character-image" alt="주마담 캐릭터">
+                </div>
+                <div class="content">
+                    <div id="fortune-question" class="speech-bubble"></div>
+                    <div id="fortune-choices" class="choices"></div>
+                </div>
+            </div>
+        </div>
+        <div id="mbti-content" class="content-container" style="display: none;">
+            <div class="container">
+                <div class="character-container">
+                    <img id="mbti-character-image" class="character-image" alt="주마담 캐릭터">
+                </div>
+                <div class="content">
+                    <div id="mbti-question" class="speech-bubble"></div>
+                    <div id="mbti-choices" class="choices"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        let questions = [];
+        let currentQuestion = 0;
+        const currentAnswers = [];
+        let characterImages = {};
+
+        let fortuneQuestions = [];
+        let currentFortuneQuestion = 0;
+        const fortuneAnswers = [];
+
+        let mbtiQuestions = [];
+        let currentMBTIQuestion = 0;
+        const mbtiAnswers = [];
+
+        const choices = [
+            ["예"],
+            [],
+            ["서울", "인천", "대전", "세종", "광주", "대구", "울산", "부산", "경기", "강원", "충북", "충남", "전남", "전북", "경북", "경남", "제주"],
+            [],
+            ["남자", "여자"],
+            [],
+            ["연상", "연하", "동갑"]
+        ];
+
+        function showHome() {
+            document.getElementById('home-content').style.display = 'block';
+            document.getElementById('dating-content').style.display = 'none';
+            document.getElementById('fortune-content').style.display = 'none';
+            document.getElementById('mbti-content').style.display = 'none';
+            loadHomeDesign();
+        }
+
+        function showDatingApplication() {
+            document.getElementById('home-content').style.display = 'none';
+            document.getElementById('dating-content').style.display = 'block';
+            document.getElementById('fortune-content').style.display = 'none';
+            document.getElementById('mbti-content').style.display = 'none';
+            fetchQuestions();
+        }
+
+        function showFortune() {
+            document.getElementById('home-content').style.display = 'none';
+            document.getElementById('dating-content').style.display = 'none';
+            document.getElementById('fortune-content').style.display = 'block';
+            document.getElementById('mbti-content').style.display = 'none';
+            fetchFortuneQuestions();
+        }
+
+        function showMBTI() {
+            document.getElementById('home-content').style.display = 'none';
+            document.getElementById('dating-content').style.display = 'none';
+            document.getElementById('fortune-content').style.display = 'none';
+            document.getElementById('mbti-content').style.display = 'block';
+            fetchMBTIQuestions();
+        }
+
+        function loadHomeDesign() {
+            fetch('/getHomeDesign')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.characterImage) {
+                        document.getElementById('home-character-image').src = `/uploads/${data.characterImage}`;
+                    }
+                    if (data.speechBubbleText) {
+                        document.getElementById('home-speech-bubble').innerText = data.speechBubbleText;
+                    }
+                })
+                .catch(error => {
+                    console.error('홈 디자인 정보를 가져오는 데 실패했습니다:', error);
+                });
+        }
+
+        function fetchQuestions() {
+            return fetch('/questions')
+                .then(response => response.json())
+                .then(data => {
+                    questions = data;
+                    showQuestion();
+                })
+                .catch(error => {
+                    console.error('질문을 불러오는 데 실패했습니다:', error);
+                    alert('질문을 불러오는 데 실패했습니다. 페이지를 새로고침해 주세요.');
+                });
+        }
+
+        function fetchFortuneQuestions() {
+            return fetch('/fortune-questions')
+                .then(response => response.json())
+                .then(data => {
+                    fortuneQuestions = data;
+                    showFortuneQuestion();
+                })
+                .catch(error => {
+                    console.error('사주&운세 질문을 불러오는 데 실패했습니다:', error);
+                    alert('질문을 불러오는 데 실패했습니다. 페이지를 새로고침해 주세요.');
+                });
+        }
+
+        function fetchMBTIQuestions() {
+            return fetch('/mbti-questions')
+                .then(response => response.json())
+                .then(data => {
+                    mbtiQuestions = data;
+                    showMBTIQuestion();
+                })
+                .catch(error => {
+                    console.error('MBTI 질문을 불러오는 데 실패했습니다:', error);
+                    alert('질문을 불러오는 데 실패했습니다. 페이지를 새로고침해 주세요.');
+                });
+        }
+
+        function showQuestion() {
+            const questionElement = document.getElementById("question");
+            questionElement.innerText = questions[currentQuestion];
+            
+            const choicesContainer = document.getElementById("choices");
+            choicesContainer.innerHTML = "";
+
+            if (choices[currentQuestion].length > 0) {
+                choices[currentQuestion].forEach(choice => {
+                    const button = document.createElement("button");
+                    button.className = "choice-button";
+                    button.innerText = choice;
+                    button.onclick = () => handleAnswer(choice);
+                    choicesContainer.appendChild(button);
+                });
+            } else {
+                const input = document.createElement("input");
+                input.className = "input-field";
+                if (currentQuestion === 1) {
+                    input.type = "text";
+                    input.maxLength = 4;
+                    input.pattern = "^[가-힣]{2,4}$";
+                    input.title = "이름은 최소 두글자부터 최대 네글자까지 한글로만 입력이 가능해요";
+                } else if (currentQuestion === 3) {
+                    input.type = "text";
+                    input.maxLength = 2;
+                    input.pattern = "^(05|04|03|02|01|00|99|98|97|96|95|94|93|92|91|90|89|88|87|86|85|84|83|82|81|80)$";
+                    input.title = "아쉽지만 05년생부터 80년생까지만 신청이 가능해요 :)";
+                } else if (currentQuestion === 5) {
+                    input.type = "text";
+                    input.maxLength = 11;
+                    input.pattern = "^010\\d{8}$";
+                    input.title = "연락처는 010으로 시작하는 11자리까지만 입력이 가능해요";
+                }
+                const button = document.createElement("button");
+                button.className = "submit-button";
+                button.innerText = "제출";
+                button.onclick = () => handleAnswer(input.value);
+                choicesContainer.appendChild(input);
+                choicesContainer.appendChild(button);
+            }
+
+            const characterImage = document.getElementById("character-image");
+            if (characterImages[currentQuestion + 1]) {
+                characterImage.src = `/uploads/${characterImages[currentQuestion + 1]}`;
+                characterImage.style.display = 'block';
+            } else {
+                characterImage.style.display = 'none';
+            }
+        }
+
+        function showFortuneQuestion() {
+            const questionElement = document.getElementById("fortune-question");
+            questionElement.innerText = fortuneQuestions[currentFortuneQuestion];
+            
+            const choicesContainer = document.getElementById("fortune-choices");
+            choicesContainer.innerHTML = "";
+
+            switch(currentFortuneQuestion) {
+                case 0:
+                    createButtonChoice(["예"], choicesContainer, handleFortuneAnswer);
+                    break;
+                case 1:
+                    createInputChoice("text", "이름을 입력해주세요", choicesContainer, handleFortuneAnswer, "^[가-힣]{2,4}$", "이름은 최소 두글자부터 최대 네글자까지 한글로만 입력이 가능해요");
+                    break;
+                case 2:
+                    createButtonChoice(["남자에요", "여자에요"], choicesContainer, handleFortuneAnswer);
+                    break;
+                case 3:
+                    const years = ["출생년도(선택)"];
+                    for (let i = 2024; i >= 1930; i--) {
+                        years.push(i.toString());
+                    }
+                    createSelectChoice(years, choicesContainer, handleFortuneAnswer);
+                    break;
+                case 4:
+                    createMonthDayChoice(choicesContainer, handleFortuneAnswer);
+                    break;
+                case 5:
+                    createButtonChoice([
+                        "자시 (23:31 ~ 01:30)", "축시 (01:31 ~ 03:30)", "인시 (03:31 ~ 05:30)",
+                        "묘시 (05:31 ~ 07:30)", "진시 (07:31 ~ 09:30)", "사시 (09:31 ~ 11:30)",
+                        "오시 (11:31 ~ 13:30)", "미시 (13:31 ~ 15:30)", "신시 (15:31 ~ 17:30)",
+                        "유시 (17:31 ~ 19:30)", "술시 (19:31 ~ 21:30)", "해시 (21:31 ~ 23:30)",
+                        "잘 모르겠어요"
+                    ], choicesContainer, handleFortuneAnswer);
+                    break;
+                default:
+                    break;
+            }
+
+            const characterImage = document.getElementById("fortune-character-image");
+            if (characterImages[currentFortuneQuestion + 1]) {
+                characterImage.src = `/uploads/${characterImages[currentFortuneQuestion + 1]}`;
+                characterImage.style.display = 'block';
+            } else {
+                characterImage.style.display = 'none';
+            }
+        }
+
+        function showMBTIQuestion() {
+            const questionElement = document.getElementById("mbti-question");
+            questionElement.innerText = mbtiQuestions[currentMBTIQuestion].question;
+            
+            const choicesContainer = document.getElementById("mbti-choices");
+            choicesContainer.innerHTML = "";
+
+            createButtonChoice(mbtiQuestions[currentMBTIQuestion].choices, choicesContainer, handleMBTIAnswer);
+
+            const characterImage = document.getElementById("mbti-character-image");
+            if (characterImages[currentMBTIQuestion + 1]) {
+                characterImage.src = `/uploads/${characterImages[currentMBTIQuestion + 1]}`;
+                characterImage.style.display = 'block';
+            } else {
+                characterImage.style.display = 'none';
+            }
+        }
+
+        function createButtonChoice(options, container, handler) {
+            options.forEach(option => {
+                const button = document.createElement("button");
+                button.className = "choice-button";
+                button.innerText = option;
+                button.onclick = () => handler(option);
+                container.appendChild(button);
+            });
+        }
+
+        function createInputChoice(type, placeholder, container, handler, pattern, title) {
+            const input = document.createElement("input");
+            input.type = type;
+            input.placeholder = placeholder;
+            input.className = "input-field";
+            if (pattern) input.pattern = pattern;
+            if (title) input.title = title;
+            container.appendChild(input);
+
+            const submitButton = document.createElement("button");
+            submitButton.className = "submit-button";
+            submitButton.innerText = "제출";
+            submitButton.onclick = () => {
+                if (input.checkValidity()) {
+                    handler(input.value);
+                } else {
+                    alert(input.title);
+                }
+            };
+            container.appendChild(submitButton);
+        }
+
+        function createSelectChoice(options, container, handler) {
+            const select = document.createElement("select");
+            select.className = "input-field";
+            options.forEach(option => {
+                const optionElement = document.createElement("option");
+                optionElement.value = option;
+                optionElement.text = option;
+                select.appendChild(optionElement);
+            });
+            container.appendChild(select);
+
+            const submitButton = document.createElement("button");
+            submitButton.className = "submit-button";
+            submitButton.innerText = "제출";
+            submitButton.onclick = () => {
+                if (select.value !== "출생년도(선택)") {
+                    handler(select.value);
+                } else {
+                    alert("출생년도를 선택해주세요.");
+                }
+            };
+            container.appendChild(submitButton);
+        }
+
+        function createMonthDayChoice(container, handler) {
+            const monthSelect = document.createElement("select");
+            monthSelect.className = "input-field";
+            monthSelect.innerHTML = "<option value=''>월(선택)</option>";
+            for (let i = 1; i <= 12; i++) {
+                const option = document.createElement("option");
+                option.value = i;
+                option.text = `${i}월`;
+                monthSelect.appendChild(option);
+            }
+            container.appendChild(monthSelect);
+
+            const daySelect = document.createElement("select");
+            daySelect.className = "input-field";
+            daySelect.innerHTML = "<option value=''>일(선택)</option>";
+            for (let i = 1; i <= 31; i++) {
+                const option = document.createElement("option");
+                option.value = i;
+                option.text = `${i}일`;
+                daySelect.appendChild(option);
+            }
+            container.appendChild(daySelect);
+
+            const submitButton = document.createElement("button");
+            submitButton.className = "submit-button";
+            submitButton.innerText = "제출";
+            submitButton.onclick = () => {
+                if (monthSelect.value && daySelect.value) {
+                    handler(`${monthSelect.value}월 ${daySelect.value}일`);
+                } else {
+                    alert("월과 일을 모두 선택해주세요.");
+                }
+            };
+            container.appendChild(submitButton);
+        }
+
+        function handleAnswer(answer) {
+            if (currentQuestion === 1) {
+                if (!/^[가-힣]{2,4}$/.test(answer)) {
+                    alert('이름은 최소 두글자부터 최대 네글자까지 한글로만 입력이 가능해요');
+                    return;
+                }
+            } else if (currentQuestion === 3) {
+                const validYears = ['05', '04', '03', '02', '01', '00', '99', '98', '97', '96', '95', '94', '93', '92', '91', '90', '89', '88', '87', '86', '85', '84', '83', '82', '81', '80'];
+                if (!validYears.includes(answer)) {
+                    alert('아쉽지만 05년생부터 80년생까지만 신청이 가능해요 :)');
+                    return;
+                }
+            } else if (currentQuestion === 5) {
+                if (!/^010\d{8}$/.test(answer)) {
+                    alert('연락처는 010으로 시작하는 11자리까지만 입력이 가능해요');
+                    return;
+                }
+            }
+            currentAnswers[currentQuestion] = answer;
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                showQuestion();
+            } else {
+                submitAnswers();
+            }
+        }
+
+        function handleFortuneAnswer(answer) {
+            if (currentFortuneQuestion === 1 && !/^[가-힣]{2,4}$/.test(answer)) {
+                alert('이름은 최소 두글자부터 최대 네글자까지 한글로만 입력이 가능해요');
+                return;
+            }
+            fortuneAnswers[currentFortuneQuestion] = answer;
+            currentFortuneQuestion++;
+            if (currentFortuneQuestion < fortuneQuestions.length) {
+                showFortuneQuestion();
+            } else {
+                submitFortuneAnswers();
+            }
+        }
+
+        function handleMBTIAnswer(answer) {
+            mbtiAnswers.push(answer);
+            currentMBTIQuestion++;
+            if (currentMBTIQuestion < mbtiQuestions.length) {
+                showMBTIQuestion();
+            } else {
+                submitMBTIAnswers();
+            }
+        }
+
+        function submitAnswers() {
+            fetch('/saveAnswers', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(currentAnswers)
+            }).then(response => {
+                if (response.ok) {
+                    showCompletionMessage();
+                } else {
+                    response.json().then(data => {
+                        alert('오류가 발생했습니다: ' + data.errors.map(e => e.msg).join(', '));
+                    });
+                }
+            });
+        }
+
+        function submitFortuneAnswers() {
+            fetch('/saveFortuneAnswers', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(fortuneAnswers)
+            }).then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('서버 응답이 실패했습니다.');
+                }
+            }).then(data => {
+                if (data.fortuneResult) {
+                    showFortuneCompletionMessage(data.fortuneResult);
+                } else {
+                    throw new Error('사주 결과가 없습니다.');
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+                alert('오류가 발생했습니다: ' + error.message);
+            });
+        }
+
+        function submitMBTIAnswers() {
+            fetch('/saveMBTIAnswers', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(mbtiAnswers)
+            }).then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('서버 응답이 실패했습니다.');
+                }
+            }).then(data => {
+                if (data.mbtiResult) {
+                    showMBTICompletionMessage(data.mbtiResult);
+                } else {
+                    throw new Error('MBTI 결과가 없습니다.');
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+                alert('오류가 발생했습니다: ' + error.message);
+            });
+        }
+
+        function showCompletionMessage() {
+            const questionElement = document.getElementById("question");
+            questionElement.innerText = '오케이~ 평일에 매니저를 통해 연락줄테니까~조금만 기다려줘 :)';
+            
+            const choicesContainer = document.getElementById("choices");
+            choicesContainer.innerHTML = "";
+        }
+
+        function showFortuneCompletionMessage(fortuneResult) {
+            const questionElement = document.getElementById("fortune-question");
+            questionElement.style.display = 'none';
+            
+            const choicesContainer = document.getElementById("fortune-choices");
+            choicesContainer.innerHTML = "";
+
+            const resultContainer = document.createElement("div");
+            resultContainer.className = "fortune-result";
+            resultContainer.style.whiteSpace = "pre-wrap";
+            resultContainer.textContent = fortuneResult;
+            choicesContainer.appendChild(resultContainer);
+
+            const datingQuestion = document.createElement("div");
+            datingQuestion.className = "speech-bubble";
+            datingQuestion.innerText = '우리 친구 사주와 어울리는 사람과 소개팅해보는 건 어때?';
+            choicesContainer.appendChild(datingQuestion);
+
+            const yesButton = document.createElement("button");
+            yesButton.className = "choice-button";
+            yesButton.innerText = "소개팅 신청 한번 해볼게요!";
+            yesButton.onclick = startDatingApplication;
+            choicesContainer.appendChild(yesButton);
+        }
+
+        function showMBTICompletionMessage(mbtiResult) {
+            const questionElement = document.getElementById("mbti-question");
+            questionElement.innerText = '자~ 친구의 MBTI 결과가 나왔어! 어떤 유형일지 궁금하지?';
+            
+            const choicesContainer = document.getElementById("mbti-choices");
+            choicesContainer.innerHTML = "";
+
+            const resultContainer = document.createElement("div");
+            resultContainer.className = "mbti-result";
+            
+            let resultText = `친구의 MBTI는 ${mbtiResult.type}야~ 이 타입은 ${mbtiResult.description}\n\n`;
+            resultText += `친구와 비슷한 유형의 유명한 인물은 ${mbtiResult.famousPeople.join(', ')}같은 사람들이야~`;
+
+            resultContainer.textContent = resultText;
+            choicesContainer.appendChild(resultContainer);
+
+            const datingQuestion = document.createElement("div");
+            datingQuestion.className = "speech-bubble";
+            datingQuestion.innerText = '우리 친구 사주와 어울리는 사람과 소개팅해보는 건 어때?';
+            choicesContainer.appendChild(datingQuestion);
+
+            const yesButton = document.createElement("button");
+            yesButton.className = "choice-button";
+            yesButton.innerText = "소개팅 신청 한번 해볼게요!";
+            yesButton.onclick = startDatingApplication;
+            choicesContainer.appendChild(yesButton);
+        }
+
+        function startDatingApplication() {
+            currentQuestion = 1; // 이름부터 시작
+            showDatingApplication();
+        }
+
+        function handleRegionSelection(region) {
+            const questionElement = document.getElementById("question");
+            questionElement.innerText = '오호~마지막으로 연락처만 남겨줘~상대방 찾아서 카카오톡으로 연락줄게~';
+
+            const choicesContainer = document.getElementById("choices");
+            choicesContainer.innerHTML = "";
+
+            const phoneInput = document.createElement("input");
+            phoneInput.type = "tel";
+            phoneInput.className = "input-field";
+            phoneInput.placeholder = "010으로 시작하는 11자리 번호";
+            phoneInput.pattern = "^010\\d{8}$";
+            choicesContainer.appendChild(phoneInput);
+
+            const submitButton = document.createElement("button");
+            submitButton.className = "submit-button";
+            submitButton.innerText = "제출";
+            submitButton.onclick = () => submitDatingApplication(region, phoneInput.value);
+            choicesContainer.appendChild(submitButton);
+        }
+
+        function submitDatingApplication(region, phone) {
+            if (!/^010\d{8}$/.test(phone)) {
+                alert('연락처는 010으로 시작하는 11자리까지만 입력이 가능해요');
+                return;
+            }
+
+            const datingData = {
+                name: currentAnswers[1],
+                gender: currentAnswers[4],
+                region: region,
+                birthYear: currentAnswers[3],
+                phone: phone,
+                timestamp: new Date().toISOString()
+            };
+
+            fetch('/saveDatingApplication', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(datingData)
+            }).then(response => {
+                if (response.ok) {
+                    showFinalMessage();
+                } else {
+                    throw new Error('서버 응답이 실패했습니다.');
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+                alert('오류가 발생했습니다: ' + error.message);
+            });
+        }
+
+        function showFinalMessage() {
+            const questionElement = document.getElementById("question");
+            questionElement.innerText = '오케이~연락줄게~';
+
+            const choicesContainer = document.getElementById("choices");
+            choicesContainer.innerHTML = "";
+        }
+
+        fetch('/getDesign')
+            .then(response => response.json())
+            .then(data => {
+                if (data.backgroundImage) {
+                    document.body.style.backgroundImage = `url(/uploads/${data.backgroundImage})`;
+                }
+                if (data.font) {
+                    document.body.style.fontFamily = data.font;
+                }
+                if (data.textColor) {
+                    document.querySelector('.content-container').style.color = data.textColor;
+                }
+                if (data.logoImage) {
+                    document.getElementById('logo').src = `/uploads/${data.logoImage}`;
+                }
+                if (data.characterImages) {
+                    characterImages = data.characterImages;
+                }
+            })
+            .catch(error => {
+                console.error('디자인 정보를 가져오는 데 실패했습니다:', error);
+            });
+
+        document.getElementById('logo').onclick = showHome;
+        
+        // 페이지 로드 시 홈 화면 표시
+        showHome();
+    </script>
+</body>
+</html>

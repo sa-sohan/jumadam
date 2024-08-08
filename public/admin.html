@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 페이지</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        .button-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .button-container button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .button-container button:hover {
+            background-color: #45a049;
+        }
+        .delete-button {
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            transition: background-color 0.3s;
+        }
+        .delete-button:hover {
+            background-color: #d32f2f;
+        }
+        .table-container {
+            max-height: 70vh;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>관리자 페이지</h1>
+        <div class="table-container">
+            <table id="answers-table">
+                <thead>
+                    <tr>
+                        <th>소개팅 신청 여부</th>
+                        <th>이름</th>
+                        <th>지역</th>
+                        <th>출생년도</th>
+                        <th>성별</th>
+                        <th>연락처</th>
+                        <th>연상/연하/동갑</th>
+                        <th>답변 완료 시각</th>
+                        <th>삭제</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- 답변 항목들이 이곳에 동적으로 추가됩니다 -->
+                </tbody>
+            </table>
+        </div>
+        <div class="button-container">
+            <button id="download-csv">CSV로 다운로드</button>
+            <button id="design-change">디자인 변경</button>
+            <button id="home-design-change">홈 디자인 변경</button>
+        </div>
+    </div>
+    <script>
+        function formatBirthYear(year) {
+            return year + '년생';
+        }
+
+        function formatPhoneNumber(phone) {
+            return phone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+        }
+
+        document.getElementById('download-csv').onclick = function() {
+            fetch('/getAnswers')
+                .then(response => response.json())
+                .then(data => {
+                    const headers = ['소개팅 신청 여부', '이름', '지역', '출생년도', '성별', '연락처', '연상/연하/동갑', '답변 완료 시각'];
+                    const csvContent = [headers.join(',')].concat(data.map(row => 
+                        row.map((cell, index) => {
+                            if (index === 3) { // 출생년도
+                                return `"${formatBirthYear(cell)}"`;
+                            } else if (index === 5) { // 연락처
+                                return `"${formatPhoneNumber(cell)}"`;
+                            } else {
+                                return `"${cell}"`;
+                            }
+                        }).join(',')
+                    )).join('\n');
+                    
+                    const encoder = new TextEncoder();
+                    const bom = encoder.encode('\uFEFF');
+                    const csvData = encoder.encode(csvContent);
+                    
+                    const blob = new Blob([bom, csvData], { type: 'text/csv;charset=utf-8;' });
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = 'answers.csv';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                });
+        };
+
+        document.getElementById('design-change').onclick = function() {
+            window.location.href = 'design.html';
+        };
+
+        document.getElementById('home-design-change').onclick = function() {
+            window.location.href = 'home_design.html';
+        };
+
+        fetch('/getAnswers')
+            .then(response => response.json())
+            .then(data => {
+                const tableBody = document.querySelector('#answers-table tbody');
+                data.forEach((row, index) => {
+                    const tr = document.createElement('tr');
+                    row.forEach((cell, cellIndex) => {
+                        const td = document.createElement('td');
+                        if (cellIndex === 6 && cell === '') {
+                            td.textContent = '미선택';
+                        } else if (cellIndex === 3) { // 출생년도
+                            td.textContent = formatBirthYear(cell);
+                        } else if (cellIndex === 5) { // 연락처
+                            td.textContent = formatPhoneNumber(cell);
+                        } else {
+                            td.textContent = cell;
+                        }
+                        tr.appendChild(td);
+                    });
+                    const deleteButton = document.createElement('button');
+                    deleteButton.textContent = '삭제';
+                    deleteButton.className = 'delete-button';
+                    deleteButton.onclick = function() {
+                        if (confirm('삭제하시겠습니까?')) {
+                            fetch(`/deleteAnswer/${index}`, { method: 'DELETE' })
+                                .then(response => {
+                                    if (response.ok) {
+                                        tr.remove();
+                                    } else {
+                                        alert('삭제에 실패했습니다.');
+                                    }
+                                });
+                        }
+                    };
+                    const td = document.createElement('td');
+                    td.appendChild(deleteButton);
+                    tr.appendChild(td);
+                    tableBody.appendChild(tr);
+                });
+            });
+    </script>
+</body>
+</html>

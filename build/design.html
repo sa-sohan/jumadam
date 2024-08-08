@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>디자인 변경</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .image-preview {
+            max-width: 200px;
+            max-height: 200px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>디자인 변경</h1>
+        <form id="design-form" enctype="multipart/form-data">
+            <div>
+                <label for="background-image">배경 이미지:</label>
+                <input type="file" id="background-image" name="background-image">
+                <img id="background-preview" class="image-preview" src="" alt="배경 이미지 미리보기">
+            </div>
+            <div>
+                <label for="logo-image">로고 이미지 (권장 크기: 200x100px):</label>
+                <input type="file" id="logo-image" name="logo-image">
+                <img id="logo-preview" class="image-preview" src="" alt="로고 이미지 미리보기">
+            </div>
+            <div>
+                <label for="font-select">폰트:</label>
+                <select id="font-select" name="font-select">
+                    <option value="Arial">Arial</option>
+                    <option value="Verdana">Verdana</option>
+                    <option value="Times New Roman">Times New Roman</option>
+                    <option value="Courier New">Courier New</option>
+                    <option value="Georgia">Georgia</option>
+                </select>
+            </div>
+            <div>
+                <label for="text-color">텍스트 색상:</label>
+                <input type="color" id="text-color" name="text-color">
+            </div>
+            <h2>주마담 캐릭터 이미지 (권장 크기: 300x300px)</h2>
+            <div id="character-images">
+                <!-- 질문별 캐릭터 이미지 입력 필드들이 여기에 동적으로 추가됩니다 -->
+            </div>
+            <button type="submit">저장</button>
+        </form>
+    </div>
+    <script>
+        const characterImagesContainer = document.getElementById('character-images');
+        for (let i = 1; i <= 7; i++) {
+            const div = document.createElement('div');
+            div.innerHTML = `
+                <label for="character-image-${i}">질문 ${i} 캐릭터 이미지:</label>
+                <input type="file" id="character-image-${i}" name="character-image-${i}">
+                <img id="character-preview-${i}" class="image-preview" src="" alt="캐릭터 이미지 ${i} 미리보기">
+            `;
+            characterImagesContainer.appendChild(div);
+        }
+
+        function previewImage(input, previewId) {
+            const preview = document.getElementById(previewId);
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        document.getElementById('background-image').addEventListener('change', function() {
+            previewImage(this, 'background-preview');
+        });
+
+        document.getElementById('logo-image').addEventListener('change', function() {
+            previewImage(this, 'logo-preview');
+        });
+
+        for (let i = 1; i <= 7; i++) {
+            document.getElementById(`character-image-${i}`).addEventListener('change', function() {
+                previewImage(this, `character-preview-${i}`);
+            });
+        }
+
+        fetch('/getDesign')
+            .then(response => response.json())
+            .then(data => {
+                if (data.font) {
+                    document.getElementById('font-select').value = data.font;
+                }
+                if (data.textColor) {
+                    document.getElementById('text-color').value = data.textColor;
+                }
+                if (data.backgroundImage) {
+                    document.getElementById('background-preview').src = `/uploads/${data.backgroundImage}`;
+                    document.getElementById('background-preview').style.display = 'block';
+                }
+                if (data.logoImage) {
+                    document.getElementById('logo-preview').src = `/uploads/${data.logoImage}`;
+                    document.getElementById('logo-preview').style.display = 'block';
+                }
+                if (data.characterImages) {
+                    for (let i = 1; i <= 7; i++) {
+                        if (data.characterImages[i]) {
+                            document.getElementById(`character-preview-${i}`).src = `/uploads/${data.characterImages[i]}`;
+                            document.getElementById(`character-preview-${i}`).style.display = 'block';
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('디자인 정보를 가져오는 데 실패했습니다:', error);
+            });
+
+        document.getElementById('design-form').onsubmit = function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch('/saveDesign', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('서버 응답이 실패했습니다.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('디자인이 성공적으로 저장되었습니다.');
+                    window.location.href = '/admin.html';
+                } else {
+                    alert('디자인 저장에 실패했습니다.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('오류가 발생했습니다. 다시 로그인해주세요.');
+                window.location.href = '/login.html';
+            });
+        };
+    </script>
+</body>
+</html>

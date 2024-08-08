@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사주&운세</title>
+    <style>
+        .fortune-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .fortune-question {
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+        .fortune-choices {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .fortune-choice, .fortune-submit {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+        .fortune-choice:hover, .fortune-submit:hover {
+            background-color: #45a049;
+        }
+        .fortune-input {
+            padding: 10px;
+            font-size: 16px;
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <div class="fortune-container">
+        <div id="fortune-question" class="fortune-question"></div>
+        <div id="fortune-choices" class="fortune-choices"></div>
+    </div>
+    <script>
+        let fortuneQuestions = [];
+        let currentFortuneQuestion = 0;
+        const fortuneAnswers = [];
+
+        function fetchFortuneQuestions() {
+            return fetch('/fortune-questions')
+                .then(response => response.json())
+                .then(data => {
+                    fortuneQuestions = data;
+                    showFortuneQuestion();
+                })
+                .catch(error => {
+                    console.error('질문을 불러오는 데 실패했습니다:', error);
+                    alert('질문을 불러오는 데 실패했습니다. 페이지를 새로고침해 주세요.');
+                });
+        }
+
+        function showFortuneQuestion() {
+            const questionElement = document.getElementById("fortune-question");
+            questionElement.innerText = fortuneQuestions[currentFortuneQuestion];
+            
+            const choicesContainer = document.getElementById("fortune-choices");
+            choicesContainer.innerHTML = "";
+
+            switch(currentFortuneQuestion) {
+                case 0:
+                case 2:
+                    createButtonChoice(["예"], choicesContainer);
+                    break;
+                case 1:
+                    createInputChoice("text", "이름을 입력해주세요", choicesContainer);
+                    break;
+                case 3:
+                    const years = [];
+                    for (let i = 2024; i >= 1930; i--) {
+                        years.push(i.toString());
+                    }
+                    createSelectChoice(years, choicesContainer);
+                    break;
+                case 4:
+                    createMonthDayChoice(choicesContainer);
+                    break;
+                case 5:
+                    createButtonChoice([
+                        "자시 (23:31 ~ 01:30)", "축시 (01:31 ~ 03:30)", "인시 (03:31 ~ 05:30)",
+                        "묘시 (05:31 ~ 07:30)", "진시 (07:31 ~ 09:30)", "사시 (09:31 ~ 11:30)",
+                        "오시 (11:31 ~ 13:30)", "미시 (13:31 ~ 15:30)", "신시 (15:31 ~ 17:30)",
+                        "유시 (17:31 ~ 19:30)", "술시 (19:31 ~ 21:30)", "해시 (21:31 ~ 23:30)",
+                        "잘 모르겠어요"
+                    ], choicesContainer);
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        function createButtonChoice(options, container) {
+            options.forEach(option => {
+                const button = document.createElement("button");
+                button.className = "fortune-choice";
+                button.innerText = option;
+                button.onclick = () => handleFortuneAnswer(option);
+                container.appendChild(button);
+            });
+        }
+
+        function createInputChoice(type, placeholder, container) {
+            const input = document.createElement("input");
+            input.type = type;
+            input.placeholder = placeholder;
+            input.className = "fortune-input";
+            container.appendChild(input);
+
+            const submitButton = document.createElement("button");
+            submitButton.className = "fortune-submit";
+            submitButton.innerText = "제출";
+            submitButton.onclick = () => handleFortuneAnswer(input.value);
+            container.appendChild(submitButton);
+        }
+
+        function createSelectChoice(options, container) {
+            const select = document.createElement("select");
+            select.className = "fortune-input";
+            options.forEach(option => {
+                const optionElement = document.createElement("option");
+                optionElement.value = option;
+                optionElement.text = option;
+                select.appendChild(optionElement);
+            });
+            container.appendChild(select);
+
+            const submitButton = document.createElement("button");
+            submitButton.className = "fortune-submit";
+            submitButton.innerText = "제출";
+            submitButton.onclick = () => handleFortuneAnswer(select.value);
+            container.appendChild(submitButton);
+        }
+
+        function createMonthDayChoice(container) {
+            const monthSelect = document.createElement("select");
+            monthSelect.className = "fortune-input";
+            for (let i = 1; i <= 12; i++) {
+                const option = document.createElement("option");
+                option.value = i;
+                option.text = `${i}월`;
+                monthSelect.appendChild(option);
+            }
+            container.appendChild(monthSelect);
+
+            const daySelect = document.createElement("select");
+            daySelect.className = "fortune-input";
+            for (let i = 1; i <= 31; i++) {
+                const option = document.createElement("option");
+                option.value = i;
+                option.text = `${i}일`;
+                daySelect.appendChild(option);
+            }
+            container.appendChild(daySelect);
+
+            const submitButton = document.createElement("button");
+            submitButton.className = "fortune-submit";
+            submitButton.innerText = "제출";
+            submitButton.onclick = () => handleFortuneAnswer(`${monthSelect.value}월 ${daySelect.value}일`);
+            container.appendChild(submitButton);
+        }
+
+        function handleFortuneAnswer(answer) {
+            fortuneAnswers[currentFortuneQuestion] = answer;
+            currentFortuneQuestion++;
+            if (currentFortuneQuestion < fortuneQuestions.length) {
+                showFortuneQuestion();
+            } else {
+                submitFortuneAnswers();
+            }
+        }
+
+        function submitFortuneAnswers() {
+            fetch('/saveFortuneAnswers', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(fortuneAnswers)
+            }).then(response => {
+                if (response.ok) {
+                    showFortuneCompletionMessage();
+                } else {
+                    response.json().then(data => {
+                        alert('오류가 발생했습니다: ' + data.message);
+                    });
+                }
+            });
+        }
+
+        function showFortuneCompletionMessage() {
+            const fortuneContainer = document.querySelector('.fortune-container');
+            fortuneContainer.innerHTML = '<div class="fortune-question">사주 분석이 완료되었습니다. 평일에 매니저를 통해 연락드리겠습니다.</div>';
+        }
+
+        fetchFortuneQuestions();
+    </script>
+</body>
+</html>

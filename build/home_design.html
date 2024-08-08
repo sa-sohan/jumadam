@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>홈 디자인 변경</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>홈 디자인 변경</h1>
+        <form id="home-design-form" enctype="multipart/form-data">
+            <div>
+                <label for="home-character-image">홈 캐릭터 이미지:</label>
+                <input type="file" id="home-character-image" name="home-character-image">
+                <img id="home-character-preview" class="image-preview" src="" alt="홈 캐릭터 이미지 미리보기">
+            </div>
+            <div>
+                <label for="speech-bubble-text">말풍선 텍스트:</label>
+                <textarea id="speech-bubble-text" name="speech-bubble-text" rows="4" cols="50"></textarea>
+            </div>
+            <button type="submit">저장</button>
+        </form>
+    </div>
+    <script>
+        function previewImage(input, previewId) {
+            const preview = document.getElementById(previewId);
+            const file = input.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        document.getElementById('home-character-image').addEventListener('change', function() {
+            previewImage(this, 'home-character-preview');
+        });
+
+        fetch('/getHomeDesign')
+            .then(response => response.json())
+            .then(data => {
+                if (data.characterImage) {
+                    document.getElementById('home-character-preview').src = `/uploads/${data.characterImage}`;
+                    document.getElementById('home-character-preview').style.display = 'block';
+                }
+                if (data.speechBubbleText) {
+                    document.getElementById('speech-bubble-text').value = data.speechBubbleText;
+                }
+            })
+            .catch(error => {
+                console.error('홈 디자인 정보를 가져오는 데 실패했습니다:', error);
+            });
+
+        document.getElementById('home-design-form').onsubmit = function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch('/saveHomeDesign', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('서버 응답이 실패했습니다.');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    alert('홈 디자인이 성공적으로 저장되었습니다.');
+                    window.location.href = '/admin.html';
+                } else {
+                    alert('홈 디자인 저장에 실패했습니다.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('오류가 발생했습니다. 다시 로그인해주세요.');
+                window.location.href = '/login.html';
+            });
+        };
+    </script>
+</body>
+</html>
