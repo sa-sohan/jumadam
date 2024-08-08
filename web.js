@@ -6,6 +6,12 @@ const app = express();
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'uploads')));
 
+// JSON 파일에 대한 라우트 추가
+app.get('/uploads/:filename', (req, res) => {
+  const filename = req.params.filename;
+  res.sendFile(path.join(__dirname, 'uploads', filename));
+});
+
 // 모든 라우트를 index.html로 리디렉션
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

@@ -329,7 +329,7 @@
         }
 
         function loadHomeDesign() {
-            fetch('/getHomeDesign')
+            fetch('/uploads/home_design.json')
                 .then(response => response.json())
                 .then(data => {
                     if (data.characterImage) {
@@ -345,7 +345,7 @@
         }
 
         function fetchQuestions() {
-            return fetch('/questions')
+            return fetch('/uploads/answers.json')
                 .then(response => response.json())
                 .then(data => {
                     questions = data;
@@ -840,7 +840,7 @@
             choicesContainer.innerHTML = "";
         }
 
-        fetch('/getDesign')
+        fetch('/uploads/design.json')
             .then(response => response.json())
             .then(data => {
                 if (data.backgroundImage) {
