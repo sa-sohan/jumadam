@@ -10,28 +10,8 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 8001;
 
-// 데이터 디렉토리 경로 설정
-const dataDir = path.join(__dirname, 'data');
-const uploadsDir = path.join(__dirname, 'uploads');
-
-// 필요한 디렉토리 생성 함수
-async function ensureDirectoryExists(directory) {
-    try {
-        await fs.access(directory);
-    } catch (error) {
-        if (error.code === 'ENOENT') {
-            await fs.mkdir(directory, { recursive: true });
-        } else {
-            throw error;
-        }
-    }
-}
-
-// 서버 시작 시 필요한 디렉토리 생성
-(async () => {
-    await ensureDirectoryExists(dataDir);
-    await ensureDirectoryExists(uploadsDir);
-})();
+// 절대 경로 설정
+const basePath = 'C:/Users/Administrator/Desktop/Jumadam/';
 
 app.use(bodyParser.json());
 app.use(express.static('public'));
@@ -49,7 +29,7 @@ app.use(session({
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, uploadsDir)
+        cb(null, 'uploads/')
     },
     filename: function (req, file, cb) {
         cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname))
@@ -60,7 +40,7 @@ const upload = multer({ storage: storage });
 
 const readAnswers = async () => {
     try {
-        const data = await fs.readFile(path.join(dataDir, 'answers.json'), 'utf-8');
+        const data = await fs.readFile(path.join(basePath, 'answers.json'), 'utf-8');
         return data.trim().split('\n').map(JSON.parse);
     } catch (error) {
         if (error.code === 'ENOENT') {
@@ -179,7 +159,7 @@ app.post('/saveDesign', requireLogin, upload.fields([
             }
         }
 
-        await fs.writeFile(path.join(dataDir, 'design.json'), JSON.stringify(designData), 'utf-8');
+        await fs.writeFile(path.join(basePath, 'design.json'), JSON.stringify(designData), 'utf-8');
         res.json({ success: true });
     } catch (error) {
         console.error('Error saving design:', error);
@@ -196,7 +176,7 @@ app.post('/saveHomeDesign', requireLogin, upload.fields([
             speechBubbleText: req.body['speech-bubble-text']
         };
 
-        await fs.writeFile(path.join(dataDir, 'home_design.json'), JSON.stringify(homeDesignData), 'utf-8');
+        await fs.writeFile(path.join(basePath, 'home_design.json'), JSON.stringify(homeDesignData), 'utf-8');
         res.json({ success: true });
     } catch (error) {
         console.error('Error saving home design:', error);
@@ -232,7 +212,7 @@ app.post('/saveAnswers', [
         const existingAnswers = await readAnswers();
         existingAnswers.push(answers);
         
-        await fs.writeFile(path.join(dataDir, 'answers.json'), existingAnswers.map(JSON.stringify).join('\n') + '\n');
+        await fs.writeFile(path.join(basePath, 'answers.json'), existingAnswers.map(JSON.stringify).join('\n') + '\n');
         res.status(200).json({ message: '답변이 저장되었습니다.' });
     } catch (error) {
         console.error('Error saving answers:', error);
@@ -249,7 +229,7 @@ app.post('/saveFortuneAnswers', async (req, res) => {
         const existingAnswers = await readAnswers();
         existingAnswers.push(answers);
         
-        await fs.writeFile(path.join(dataDir, 'fortune_answers.json'), existingAnswers.map(JSON.stringify).join('\n') + '\n');
+        await fs.writeFile(path.join(basePath, 'fortune_answers.json'), existingAnswers.map(JSON.stringify).join('\n') + '\n');
         
         // 사주팔자 결과 생성
         const fortuneResult = generateFortuneResult(answers);
@@ -270,7 +250,7 @@ app.post('/saveMBTIAnswers', async (req, res) => {
         const existingAnswers = await readAnswers();
         existingAnswers.push(answers);
         
-        await fs.writeFile(path.join(dataDir, 'mbti_answers.json'), existingAnswers.map(JSON.stringify).join('\n') + '\n');
+        await fs.writeFile(path.join(basePath, 'mbti_answers.json'), existingAnswers.map(JSON.stringify).join('\n') + '\n');
         
         // MBTI 결과 생성
         const mbtiResult = generateMBTIResult(answers);
@@ -365,134 +345,134 @@ function generateFortuneResult(answers) {
     result += birthYear % 2 === 0 
         ? "전반적으로 안정적이고 차분한 한 해가 될 것 같아~ " 
         : "변화와 도전의 기회가 많은 한 해가 될 것 같아! ";
-    result += "자신을 믿고 꾸준히 노력한다면 좋은 결과를 얻을 수 있을 거야! 파이팅!";
+        result += "자신을 믿고 꾸준히 노력한다면 좋은 결과를 얻을 수 있을 거야! 파이팅!";
 
-    return result;
-}
-
-function generateMBTIResult(answers) {
-    let type = "";
-    type += answers[0].startsWith("새로운 사람들과") ? "E" : "I";
-    type += answers[3].startsWith("현실적이고") ? "S" : "N";
-    type += answers[2].startsWith("논리적으로") ? "T" : "F";
-    type += answers[1].startsWith("체계적으로") ? "J" : "P";
-
-    const descriptions = {
-        "ISTJ": "신중하고 조용하며 집중력과 실천력이 높은 편이야.",
-        "ISFJ": "차분하고 친근하며 책임감이 강하고 동정심이 많은 편이야.",
-        "INFJ": "인내심이 많고 통찰력이 뛰어나며 화합을 추구하시는 편이야.",
-        "INTJ": "독창적이고 분석력이 뛰어나며 내적 신념이 강한 편이야.",
-        "ISTP": "조용하고 과묵하지만 손재주가 뛰어나고 응용력이 좋은 편이야.",
-        "ISFP": "따뜻한 감성을 지니고 있고 겸손하고 헌신적인 편이야.",
-        "INFP": "이상주의적이고 적응력이 높으며 정열적인 편이야.",
-        "INTP": "논리적이고 분석적이며 풍부한 아이디어를 갖고 있는 편이야.",
-        "ESTP": "활동적이고 적응력이 뛰어나며 현실적인 편이야.",
-        "ESFP": "사교적이고 활발하며 수용력이 높은 편이야.",
-        "ENFP": "열정적이고 창의적이며 항상 새로운 가능성을 찾는 편이야.",
-        "ENTP": "독창적이고 분석적이며 새로운 도전을 즐기는 편이야.",
-        "ESTJ": "현실감각이 뛰어나고 체계적이며 지도력이 있는 편이야.",
-        "ESFJ": "동정심이 많고 개방적이며 인화를 중시하는 편이야.",
-        "ENFJ": "참을성이 많고 이해심이 많으며 능동적인 편이야.",
-        "ENTJ": "철저하고 논리적이며 지도력과 통솔력이 있는 편이야."
-    };
-
-    const famousPeople = {
-        "ISTJ": ["앙겔라 메르켈", "조지 워싱턴"],
-        "ISFJ": ["테레사 수녀", "케이트 미들턴"],
-        "INFJ": ["넬슨 만델라", "마틴 루터 킹 주니어"],
-        "INTJ": ["일론 머스크", "마크 주커버그"],
-        "ISTP": ["스티브 잡스", "베어 그릴스"],
-        "ISFP": ["마이클 잭슨", "프리다 칼로"],
-        "INFP": ["윌리엄 셰익스피어", "톨킨"],
-        "INTP": ["알베르트 아인슈타인", "빌 게이츠"],
-        "ESTP": ["도널드 트럼프", "마돈나"],
-        "ESFP": ["제이미 올리버", "엘렌 드제너러스"],
-        "ENFP": ["로버트 다우니 주니어", "빌 클린턴"],
-        "ENTP": ["스티브 워즈니악", "레오나르도 다 빈치"],
-        "ESTJ": ["미셸 오바마", "샘 월튼"],
-        "ESFJ": ["테일러 스위프트", "휴 잭맨"],
-        "ENFJ": ["버락 오바마", "오프라 윈프리"],
-        "ENTJ": ["스티브 발머", "고든 램지"]
-    };
-
-    return {
-        type: type,
-        description: descriptions[type] || `${type} 유형에 대한 설명을 찾을 수 없어요. 정말 독특한 분이시네요!`,
-        famousPeople: famousPeople[type] || [`${type} 유형의 유명인을 찾을 수 없어요. 당신이 첫 번째 ${type} 유명인이 될 수 있어요!`]
-    };
-}
-
-app.get('/getAnswers', requireLogin, async (req, res) => {
-    try {
-        const answers = await readAnswers();
-        res.json(answers);
-    } catch (error) {
-        console.error('Error reading answers:', error);
-        res.status(500).json({ message: '답변을 불러오는 중 오류가 발생했습니다.' });
+        return result;
     }
-});
-
-app.get('/getDesign', async (req, res) => {
-    try {
-        const data = await fs.readFile(path.join(dataDir, 'design.json'), 'utf-8');
-        res.json(JSON.parse(data));
-    } catch (error) {
-        if (error.code === 'ENOENT') {
-            res.json({});
-        } else {
-            console.error('Error reading design:', error);
-            res.status(500).json({ message: '디자인을 불러오는 중 오류가 발생했습니다.' });
+    
+    function generateMBTIResult(answers) {
+        let type = "";
+        type += answers[0].startsWith("새로운 사람들과") ? "E" : "I";
+        type += answers[3].startsWith("현실적이고") ? "S" : "N";
+        type += answers[2].startsWith("논리적으로") ? "T" : "F";
+        type += answers[1].startsWith("체계적으로") ? "J" : "P";
+    
+        const descriptions = {
+            "ISTJ": "신중하고 조용하며 집중력과 실천력이 높은 편이야.",
+            "ISFJ": "차분하고 친근하며 책임감이 강하고 동정심이 많은 편이야.",
+            "INFJ": "인내심이 많고 통찰력이 뛰어나며 화합을 추구하시는 편이야.",
+            "INTJ": "독창적이고 분석력이 뛰어나며 내적 신념이 강한 편이야.",
+            "ISTP": "조용하고 과묵하지만 손재주가 뛰어나고 응용력이 좋은 편이야.",
+            "ISFP": "따뜻한 감성을 지니고 있고 겸손하고 헌신적인 편이야.",
+            "INFP": "이상주의적이고 적응력이 높으며 정열적인 편이야.",
+            "INTP": "논리적이고 분석적이며 풍부한 아이디어를 갖고 있는 편이야.",
+            "ESTP": "활동적이고 적응력이 뛰어나며 현실적인 편이야.",
+            "ESFP": "사교적이고 활발하며 수용력이 높은 편이야.",
+            "ENFP": "열정적이고 창의적이며 항상 새로운 가능성을 찾는 편이야.",
+            "ENTP": "독창적이고 분석적이며 새로운 도전을 즐기는 편이야.",
+            "ESTJ": "현실감각이 뛰어나고 체계적이며 지도력이 있는 편이야.",
+            "ESFJ": "동정심이 많고 개방적이며 인화를 중시하는 편이야.",
+            "ENFJ": "참을성이 많고 이해심이 많으며 능동적인 편이야.",
+            "ENTJ": "철저하고 논리적이며 지도력과 통솔력이 있는 편이야."
+        };
+    
+        const famousPeople = {
+            "ISTJ": ["앙겔라 메르켈", "조지 워싱턴"],
+            "ISFJ": ["테레사 수녀", "케이트 미들턴"],
+            "INFJ": ["넬슨 만델라", "마틴 루터 킹 주니어"],
+            "INTJ": ["일론 머스크", "마크 주커버그"],
+            "ISTP": ["스티브 잡스", "베어 그릴스"],
+            "ISFP": ["마이클 잭슨", "프리다 칼로"],
+            "INFP": ["윌리엄 셰익스피어", "톨킨"],
+            "INTP": ["알베르트 아인슈타인", "빌 게이츠"],
+            "ESTP": ["도널드 트럼프", "마돈나"],
+            "ESFP": ["제이미 올리버", "엘렌 드제너러스"],
+            "ENFP": ["로버트 다우니 주니어", "빌 클린턴"],
+            "ENTP": ["스티브 워즈니악", "레오나르도 다 빈치"],
+            "ESTJ": ["미셸 오바마", "샘 월튼"],
+            "ESFJ": ["테일러 스위프트", "휴 잭맨"],
+            "ENFJ": ["버락 오바마", "오프라 윈프리"],
+            "ENTJ": ["스티브 발머", "고든 램지"]
+        };
+    
+        return {
+            type: type,
+            description: descriptions[type] || `${type} 유형에 대한 설명을 찾을 수 없어요. 정말 독특한 분이시네요!`,
+            famousPeople: famousPeople[type] || [`${type} 유형의 유명인을 찾을 수 없어요. 당신이 첫 번째 ${type} 유명인이 될 수 있어요!`]
+        };
+    }
+    
+    app.get('/getAnswers', requireLogin, async (req, res) => {
+        try {
+            const answers = await readAnswers();
+            res.json(answers);
+        } catch (error) {
+            console.error('Error reading answers:', error);
+            res.status(500).json({ message: '답변을 불러오는 중 오류가 발생했습니다.' });
         }
-    }
-});
-
-app.get('/getHomeDesign', async (req, res) => {
-    try {
-        const data = await fs.readFile(path.join(dataDir, 'home_design.json'), 'utf-8');
-        res.json(JSON.parse(data));
-    } catch (error) {
-        if (error.code === 'ENOENT') {
-            res.json({});
-        } else {
-            console.error('Error reading home design:', error);
-            res.status(500).json({ message: '홈 디자인을 불러오는 중 오류가 발생했습니다.' });
+    });
+    
+    app.get('/getDesign', async (req, res) => {
+        try {
+            const data = await fs.readFile(path.join(basePath, 'design.json'), 'utf-8');
+            res.json(JSON.parse(data));
+        } catch (error) {
+            if (error.code === 'ENOENT') {
+                res.json({});
+            } else {
+                console.error('Error reading design:', error);
+                res.status(500).json({ message: '디자인을 불러오는 중 오류가 발생했습니다.' });
+            }
         }
-    }
-});
-
-app.delete('/deleteAnswer/:index', requireLogin, async (req, res) => {
-    const index = parseInt(req.params.index, 10);
-    try {
-        const answers = await readAnswers();
-        if (index >= 0 && index < answers.length) {
-            answers.splice(index, 1);
-            await fs.writeFile(path.join(dataDir, 'answers.json'), answers.map(JSON.stringify).join('\n') + '\n');
-            res.json({ message: '답변이 삭제되었습니다.' });
-        } else {
-            res.status(404).json({ message: '해당 답변을 찾을 수 없습니다.' });
+    });
+    
+    app.get('/getHomeDesign', async (req, res) => {
+        try {
+            const data = await fs.readFile(path.join(basePath, 'home_design.json'), 'utf-8');
+            res.json(JSON.parse(data));
+        } catch (error) {
+            if (error.code === 'ENOENT') {
+                res.json({});
+            } else {
+                console.error('Error reading home design:', error);
+                res.status(500).json({ message: '홈 디자인을 불러오는 중 오류가 발생했습니다.' });
+            }
         }
-    } catch (error) {
-        console.error('Error deleting answer:', error);
-        res.status(500).json({ message: '답변 삭제 중 오류가 발생했습니다.' });
-    }
-});
-
-app.post('/saveDatingApplication', async (req, res) => {
-    try {
-        const { name, gender, region, birthYear, phone, timestamp } = req.body;
-        const datingApplication = ['예', name, region, birthYear, gender, phone, '미선택', timestamp];
-        
-        const existingAnswers = await readAnswers();
-        existingAnswers.push(datingApplication);
-        
-        await fs.writeFile(path.join(dataDir, 'answers.json'), existingAnswers.map(JSON.stringify).join('\n') + '\n');
-        res.status(200).json({ message: '소개팅 신청이 저장되었습니다.' });
-    } catch (error) {
-        console.error('Error saving dating application:', error);
-        res.status(500).json({ message: '소개팅 신청 저장 중 오류가 발생했습니다.' });
-    }
-});
-
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+    });
+    
+    app.delete('/deleteAnswer/:index', requireLogin, async (req, res) => {
+        const index = parseInt(req.params.index, 10);
+        try {
+            const answers = await readAnswers();
+            if (index >= 0 && index < answers.length) {
+                answers.splice(index, 1);
+                await fs.writeFile(path.join(basePath, 'answers.json'), answers.map(JSON.stringify).join('\n') + '\n');
+                res.json({ message: '답변이 삭제되었습니다.' });
+            } else {
+                res.status(404).json({ message: '해당 답변을 찾을 수 없습니다.' });
+            }
+        } catch (error) {
+            console.error('Error deleting answer:', error);
+            res.status(500).json({ message: '답변 삭제 중 오류가 발생했습니다.' });
+        }
+    });
+    
+    app.post('/saveDatingApplication', async (req, res) => {
+        try {
+            const { name, gender, region, birthYear, phone, timestamp } = req.body;
+            const datingApplication = ['예', name, region, birthYear, gender, phone, '미선택', timestamp];
+            
+            const existingAnswers = await readAnswers();
+            existingAnswers.push(datingApplication);
+            
+            await fs.writeFile(path.join(basePath, 'answers.json'), existingAnswers.map(JSON.stringify).join('\n') + '\n');
+            res.status(200).json({ message: '소개팅 신청이 저장되었습니다.' });
+        } catch (error) {
+            console.error('Error saving dating application:', error);
+            res.status(500).json({ message: '소개팅 신청 저장 중 오류가 발생했습니다.' });
+        }
+    });
+    
+    app.listen(PORT, () => {
+        console.log(`Server is running on http://localhost:${PORT}`);
+    });
