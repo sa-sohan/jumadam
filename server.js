@@ -411,14 +411,14 @@ function generateFortuneResult(answers) {
     
     app.get('/getDesign', async (req, res) => {
         try {
-            const data = await fs.readFile(path.join(__dirname, 'design.json'), 'utf-8');
+            const data = await fs.readFile(path.join(__dirname, 'uploads', 'design.json'), 'utf-8');
             res.json(JSON.parse(data));
         } catch (error) {
             if (error.code === 'ENOENT') {
-                res.json({});
+                res.status(404).json({ error: 'Design data not found' });
             } else {
                 console.error('Error reading design:', error);
-                res.status(500).json({ message: '디자인을 불러오는 중 오류가 발생했습니다.' });
+                res.status(500).json({ error: 'Failed to load design data' });
             }
         }
     });
