@@ -10,12 +10,9 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 8001;
 
-// 절대 경로 설정
-const basePath = path.join(__dirname); // __dirname은 현재 파일의 디렉토리를 가리킵니다.
-
 app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(basePath, 'uploads')));
+app.use(express.static('public'));
+app.use('/uploads', express.static('uploads'));
 
 app.use(session({
     secret: process.env.SESSION_SECRET || 'your_secret_key',
@@ -29,10 +26,10 @@ app.use(session({
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, path.join(basePath, 'uploads'));
+        cb(null, 'uploads/')
     },
     filename: function (req, file, cb) {
-        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname))
     }
 });
 
@@ -40,7 +37,7 @@ const upload = multer({ storage: storage });
 
 const readAnswers = async () => {
     try {
-        const data = await fs.readFile(path.join(basePath, 'answers.json'), 'utf-8');
+        const data = await fs.readFile('answers.json', 'utf-8');
         return data.trim().split('\n').map(JSON.parse);
     } catch (error) {
         if (error.code === 'ENOENT') {
