@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 8001;
 
 app.use(bodyParser.json());
 app.use(express.static('public'));
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(__dirname));
 
 app.use(session({
     secret: process.env.SESSION_SECRET || 'your_secret_key',
