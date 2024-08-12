@@ -11,11 +11,11 @@ const app = express();
 const PORT = process.env.PORT || 8001;
 
 // 절대 경로 설정
-const basePath = 'C:/Users/Administrator/Desktop/Jumadam/';
+const basePath = path.join(__dirname); // __dirname은 현재 파일의 디렉토리를 가리킵니다.
 
 app.use(bodyParser.json());
-app.use(express.static('public'));
-app.use('/uploads', express.static('uploads'));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(basePath, 'uploads')));
 
 app.use(session({
     secret: process.env.SESSION_SECRET || 'your_secret_key',
@@ -29,10 +29,10 @@ app.use(session({
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'uploads/')
+        cb(null, path.join(basePath, 'uploads'));
     },
     filename: function (req, file, cb) {
-        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname))
+        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
     }
 });
 
@@ -159,7 +159,7 @@ app.post('/saveDesign', requireLogin, upload.fields([
             }
         }
 
-        await fs.writeFile(path.join(basePath, 'design.json'), JSON.stringify(designData), 'utf-8');
+        await fs.writeFile('design.json', JSON.stringify(designData), 'utf-8');
         res.json({ success: true });
     } catch (error) {
         console.error('Error saving design:', error);
@@ -176,7 +176,7 @@ app.post('/saveHomeDesign', requireLogin, upload.fields([
             speechBubbleText: req.body['speech-bubble-text']
         };
 
-        await fs.writeFile(path.join(basePath, 'home_design.json'), JSON.stringify(homeDesignData), 'utf-8');
+        await fs.writeFile('home_design.json', JSON.stringify(homeDesignData), 'utf-8');
         res.json({ success: true });
     } catch (error) {
         console.error('Error saving home design:', error);
@@ -212,7 +212,7 @@ app.post('/saveAnswers', [
         const existingAnswers = await readAnswers();
         existingAnswers.push(answers);
         
-        await fs.writeFile(path.join(basePath, 'answers.json'), existingAnswers.map(JSON.stringify).join('\n') + '\n');
+        await fs.writeFile('answers.json', existingAnswers.map(JSON.stringify).join('\n') + '\n');
         res.status(200).json({ message: '답변이 저장되었습니다.' });
     } catch (error) {
         console.error('Error saving answers:', error);
@@ -229,7 +229,7 @@ app.post('/saveFortuneAnswers', async (req, res) => {
         const existingAnswers = await readAnswers();
         existingAnswers.push(answers);
         
-        await fs.writeFile(path.join(basePath, 'fortune_answers.json'), existingAnswers.map(JSON.stringify).join('\n') + '\n');
+        await fs.writeFile('fortune_answers.json', existingAnswers.map(JSON.stringify).join('\n') + '\n');
         
         // 사주팔자 결과 생성
         const fortuneResult = generateFortuneResult(answers);
@@ -250,7 +250,7 @@ app.post('/saveMBTIAnswers', async (req, res) => {
         const existingAnswers = await readAnswers();
         existingAnswers.push(answers);
         
-        await fs.writeFile(path.join(basePath, 'mbti_answers.json'), existingAnswers.map(JSON.stringify).join('\n') + '\n');
+        await fs.writeFile('mbti_answers.json', existingAnswers.map(JSON.stringify).join('\n') + '\n');
         
         // MBTI 결과 생성
         const mbtiResult = generateMBTIResult(answers);
@@ -414,7 +414,7 @@ function generateFortuneResult(answers) {
     
     app.get('/getDesign', async (req, res) => {
         try {
-            const data = await fs.readFile(path.join(basePath, 'design.json'), 'utf-8');
+            const data = await fs.readFile('design.json', 'utf-8');
             res.json(JSON.parse(data));
         } catch (error) {
             if (error.code === 'ENOENT') {
@@ -428,7 +428,7 @@ function generateFortuneResult(answers) {
     
     app.get('/getHomeDesign', async (req, res) => {
         try {
-            const data = await fs.readFile(path.join(basePath, 'home_design.json'), 'utf-8');
+            const data = await fs.readFile('home_design.json', 'utf-8');
             res.json(JSON.parse(data));
         } catch (error) {
             if (error.code === 'ENOENT') {
@@ -446,7 +446,7 @@ function generateFortuneResult(answers) {
             const answers = await readAnswers();
             if (index >= 0 && index < answers.length) {
                 answers.splice(index, 1);
-                await fs.writeFile(path.join(basePath, 'answers.json'), answers.map(JSON.stringify).join('\n') + '\n');
+                await fs.writeFile('answers.json', answers.map(JSON.stringify).join('\n') + '\n');
                 res.json({ message: '답변이 삭제되었습니다.' });
             } else {
                 res.status(404).json({ message: '해당 답변을 찾을 수 없습니다.' });
@@ -465,7 +465,7 @@ function generateFortuneResult(answers) {
             const existingAnswers = await readAnswers();
             existingAnswers.push(datingApplication);
             
-            await fs.writeFile(path.join(basePath, 'answers.json'), existingAnswers.map(JSON.stringify).join('\n') + '\n');
+            await fs.writeFile('answers.json', existingAnswers.map(JSON.stringify).join('\n') + '\n');
             res.status(200).json({ message: '소개팅 신청이 저장되었습니다.' });
         } catch (error) {
             console.error('Error saving dating application:', error);
