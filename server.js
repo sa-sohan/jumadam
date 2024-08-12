@@ -37,7 +37,7 @@ const upload = multer({ storage: storage });
 
 const readAnswers = async () => {
     try {
-        const data = await fs.readFile('answers.json', 'utf-8');
+        const data = await fs.readFile(path.join(__dirname, 'answers.json'), 'utf-8');
         return data.trim().split('\n').map(JSON.parse);
     } catch (error) {
         if (error.code === 'ENOENT') {
@@ -156,7 +156,7 @@ app.post('/saveDesign', requireLogin, upload.fields([
             }
         }
 
-        await fs.writeFile('design.json', JSON.stringify(designData), 'utf-8');
+        await fs.writeFile(path.join(__dirname, 'design.json'), JSON.stringify(designData), 'utf-8');
         res.json({ success: true });
     } catch (error) {
         console.error('Error saving design:', error);
@@ -173,7 +173,7 @@ app.post('/saveHomeDesign', requireLogin, upload.fields([
             speechBubbleText: req.body['speech-bubble-text']
         };
 
-        await fs.writeFile('home_design.json', JSON.stringify(homeDesignData), 'utf-8');
+        await fs.writeFile(path.join(__dirname, 'home_design.json'), JSON.stringify(homeDesignData), 'utf-8');
         res.json({ success: true });
     } catch (error) {
         console.error('Error saving home design:', error);
@@ -411,7 +411,7 @@ function generateFortuneResult(answers) {
     
     app.get('/getDesign', async (req, res) => {
         try {
-            const data = await fs.readFile('design.json', 'utf-8');
+            const data = await fs.readFile(path.join(__dirname, 'design.json'), 'utf-8');
             res.json(JSON.parse(data));
         } catch (error) {
             if (error.code === 'ENOENT') {
@@ -425,7 +425,7 @@ function generateFortuneResult(answers) {
     
     app.get('/getHomeDesign', async (req, res) => {
         try {
-            const data = await fs.readFile('home_design.json', 'utf-8');
+            const data = await fs.readFile(path.join(__dirname, 'home_design.json'), 'utf-8');
             res.json(JSON.parse(data));
         } catch (error) {
             if (error.code === 'ENOENT') {
