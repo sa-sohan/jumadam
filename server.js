@@ -417,6 +417,7 @@ app.get('/api/design', async (req, res) => {
         if (error.code === 'ENOENT') {
             res.status(404).json({ error: 'Design data not found' });
         } else {
+            console.error('Error reading design:', error);
             res.status(500).json({ error: 'Failed to load design data' });
         }
     }
