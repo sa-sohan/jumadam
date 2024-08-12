@@ -409,7 +409,7 @@ function generateFortuneResult(answers) {
         }
     });
     
-    app.get('/getDesign', async (req, res) => {
+    app.get('/api/design', async (req, res) => {
         try {
             const data = await fs.readFile(path.join(__dirname, 'uploads', 'design.json'), 'utf-8');
             res.json(JSON.parse(data));
@@ -417,11 +417,11 @@ function generateFortuneResult(answers) {
             if (error.code === 'ENOENT') {
                 res.status(404).json({ error: 'Design data not found' });
             } else {
-                console.error('Error reading design:', error);
                 res.status(500).json({ error: 'Failed to load design data' });
             }
         }
     });
+    
     
     app.get('/getHomeDesign', async (req, res) => {
         try {
