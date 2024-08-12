@@ -3,8 +3,8 @@ const path = require('path');
 const app = express();
 
 // 정적 파일 제공
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, 'uploads')));
+app.use('/public', express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // JSON 파일에 대한 라우트 추가
 app.get('/uploads/:filename', (req, res) => {
