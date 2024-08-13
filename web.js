@@ -491,7 +491,7 @@ function generateFortuneResult(answers) {
             res.status(200).json({ message: '소개팅 신청이 저장되었습니다.' });
         } catch (error) {
             console.error('Error saving dating application:', error);
-            res.status(500).json({ message: '소개팅 신청 저장 중 오류가 발생했습니다.' });
+            res.status(500).json({ message: '소개팅 신청 저장 중 오류가 발생했습니다..' });
         }
     });
     
