@@ -476,5 +476,5 @@ function generateFortuneResult(answers) {
     });
     
     app.listen(PORT, () => {
-        console.log(`Server is running on http://localhost:${PORT}`);
+        console.log(`20240813_TEST Server is running on http://localhost:${PORT}`);
     });
