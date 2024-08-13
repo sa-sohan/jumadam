@@ -496,5 +496,5 @@ function generateFortuneResult(answers) {
     });
     
     app.listen(PORT, () => {
-        console.log(`Server is running on http://localhost:${PORT}`);
+        console.log(`서버실행=> http://localhost:${PORT}`);
     });
