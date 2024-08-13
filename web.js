@@ -495,9 +495,9 @@ function generateFortuneResult(answers) {
         }
     });
     
-    app.listen(port, () => {
+    app.listen(PORT, () => {
 
         const start = Date.now()
 
-        console.log(`Server is running on port ${port}\t${start}`);
+        console.log(`(TEST) server on port ${PORT}\t${start}`);
     });
