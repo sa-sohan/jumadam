@@ -1,3 +1,28 @@
+// const express = require('express');
+// const path = require('path');
+// const app = express();
+
+// // 정적 파일 제공
+// app.use('/public', express.static(path.join(__dirname, 'public')));
+// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// // JSON 파일에 대한 라우트 추가
+// app.get('/uploads/:filename', (req, res) => {
+//   const filename = req.params.filename;
+//   res.sendFile(path.join(__dirname, 'uploads', filename));
+// });
+
+// // 모든 라우트를 index.html로 리디렉션
+// app.get('*', (req, res) => {
+//   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+// });
+
+// const port = process.env.PORT || 8001;
+// app.listen(port, () => {
+//   console.log(`Server is running on port ${port}`);
+// });
+
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs').promises;
@@ -466,10 +491,13 @@ function generateFortuneResult(answers) {
             res.status(200).json({ message: '소개팅 신청이 저장되었습니다.' });
         } catch (error) {
             console.error('Error saving dating application:', error);
-            res.status(500).json({ message: '소개팅 신청 저장 중 오류가 발생했습니다.' });
+            res.status(500).json({ message: '소개팅 신청 저장 중 오류가 발생했습니다..' });
         }
     });
     
     app.listen(PORT, () => {
-        console.log(`Server is running on ${PORT}`);
+
+        const start = Date.now()
+
+        console.log(`(TEST) server on port ${PORT}\t${start}`);
     });
