@@ -74,7 +74,7 @@ app.get('/questions', (req, res) => {
 });
 
 app.get('/', (req, res) => {
-    res.send('Hello Express!!!!!!!')
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 
