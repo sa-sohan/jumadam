@@ -117,8 +117,20 @@
 
         document.getElementById('download-csv').onclick = function() {
             fetch('/getAnswers')
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            window.location.href = '/login.html';
+                            throw new Error('인증이 필요합니다.');
+                        }
+                        throw new Error('서버 오류');
+                    }
+                    return response.json();
+                })
                 .then(data => {
+                    if (!Array.isArray(data)) {
+                        throw new Error('데이터 형식이 올바르지 않습니다.');
+                    }
                     const headers = ['소개팅 신청 여부', '이름', '지역', '출생년도', '성별', '연락처', '연상/연하/동갑', '답변 완료 시각'];
                     const csvContent = [headers.join(',')].concat(data.map(row => 
                         row.map((cell, index) => {
@@ -145,6 +157,10 @@
                     document.body.appendChild(a);
                     a.click();
                     window.URL.revokeObjectURL(url);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('CSV 다운로드 중 오류가 발생했습니다: ' + error.message);
                 });
         };
 
@@ -157,8 +173,21 @@
         };
 
         fetch('/getAnswers')
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/login.html';
+                        throw new Error('인증이 필요합니다.');
+                    }
+                    throw new Error('서버 오류');
+                }
+                return response.json();
+            })
             .then(data => {
+                if (!Array.isArray(data)) {
+                    console.error('Received data is not an array:', data);
+                    throw new Error('데이터 형식이 올바르지 않습니다.');
+                }
                 const tableBody = document.querySelector('#answers-table tbody');
                 data.forEach((row, index) => {
                     const tr = document.createElement('tr');
@@ -182,11 +211,14 @@
                         if (confirm('삭제하시겠습니까?')) {
                             fetch(`/deleteAnswer/${index}`, { method: 'DELETE' })
                                 .then(response => {
-                                    if (response.ok) {
-                                        tr.remove();
-                                    } else {
-                                        alert('삭제에 실패했습니다.');
+                                    if (!response.ok) {
+                                        throw new Error('삭제 실패');
                                     }
+                                    tr.remove();
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                    alert('삭제에 실패했습니다.');
                                 });
                         }
                     };
@@ -195,6 +227,10 @@
                     tr.appendChild(td);
                     tableBody.appendChild(tr);
                 });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('데이터를 불러오는 중 오류가 발생했습니다: ' + error.message);
             });
     </script>
 </body>
