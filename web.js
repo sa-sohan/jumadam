@@ -17,9 +17,10 @@ app.use('/uploads', express.static('uploads'));
 app.use(session({
     secret: process.env.SESSION_SECRET || 'your_secret_key',
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: { 
         secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
 }));
@@ -53,10 +54,10 @@ const auth = {
 };
 
 const requireLogin = (req, res, next) => {
-    if (req.session.loggedIn) {
+    if (req.session && req.session.loggedIn) {
         next();
     } else {
-        res.status(401).json({ success: false, message: '인증이 필요합니다.' });
+        res.redirect('/login.html'); // 또는 에러 메시지 대신 로그인 페이지로 리다이렉트
     }
 };
 
@@ -72,11 +73,6 @@ app.get('/questions', (req, res) => {
     ];
     res.json(questions);
 });
-
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
 
 app.get('/fortune-questions', (req, res) => {
     const fortuneQuestions = [
@@ -476,5 +472,5 @@ function generateFortuneResult(answers) {
     });
     
     app.listen(PORT, () => {
-        console.log(`20240813_TEST Server is running on http://localhost:${PORT}`);
+        console.log(`Server is running on http://localhost:${PORT}`);
     });
