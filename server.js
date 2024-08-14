@@ -17,9 +17,10 @@ app.use('/uploads', express.static('uploads'));
 app.use(session({
     secret: process.env.SESSION_SECRET || 'your_secret_key',
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: { 
         secure: process.env.NODE_ENV === 'production',
+        httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
 }));
@@ -53,13 +54,12 @@ const auth = {
 };
 
 const requireLogin = (req, res, next) => {
-    if (req.session.loggedIn) {
+    if (req.session && req.session.loggedIn) {
         next();
     } else {
         res.status(401).json({ success: false, message: '인증이 필요합니다.' });
     }
 };
-
 app.get('/questions', (req, res) => {
     const questions = [
         "유휴~우리 친구 안녕? 쓸쓸해보이는 걸? 내가 소개팅 한번 해줄까~?",
