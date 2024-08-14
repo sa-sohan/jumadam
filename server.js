@@ -57,9 +57,10 @@ const requireLogin = (req, res, next) => {
     if (req.session && req.session.loggedIn) {
         next();
     } else {
-        res.status(401).json({ success: false, message: '인증이 필요합니다.' });
+        res.redirect('/login.html'); // 또는 에러 메시지 대신 로그인 페이지로 리다이렉트
     }
 };
+
 app.get('/questions', (req, res) => {
     const questions = [
         "유휴~우리 친구 안녕? 쓸쓸해보이는 걸? 내가 소개팅 한번 해줄까~?",
