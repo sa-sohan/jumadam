@@ -47,7 +47,7 @@ app.use((req, res, next) => {
 
 // HTML 확장자 미들웨어
 app.use((req, res, next) => {
-    if (req.path.match(/^\/[^.]+$/)) {
+    if (req.method === 'GET' && req.path.match(/^\/[^.]+$/)) {
         const filePath = path.join(__dirname, 'public', `${req.path}.html`);
         fs.access(filePath, fs.constants.F_OK)
             .then(() => {
@@ -58,6 +58,13 @@ app.use((req, res, next) => {
     } else {
         next();
     }
+});
+
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    console.log('Headers:', req.headers);
+    console.log('Body:', req.body);
+    next();
 });
 
 const storage = multer.diskStorage({
@@ -147,7 +154,7 @@ app.get('/mbti-questions', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-    console.log('Login attempt:', req.body);
+    console.log('Login attempt received:', req.body);
     const { username, password } = req.body;
     if (username === auth.username && password === auth.password) {
         req.session.loggedIn = true;
@@ -164,6 +171,7 @@ app.post('/login', (req, res) => {
         res.status(401).json({ success: false, message: '잘못된 인증 정보입니다.' });
     }
 });
+
 
 app.get('/admin', requireLogin, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
@@ -533,9 +541,16 @@ app.use((req, res, next) => {
     res.status(404).send("Sorry, that route doesn't exist.");
 });
 
+app.use((req, res) => {
+    console.log(`404 Not Found: ${req.method} ${req.url}`);
+    res.status(404).json({ success: false, message: "Sorry, that route doesn't exist." });
+});
+
+
+
 app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).send('Something broke!');
+    console.error('Server error:', err.stack);
+    res.status(500).json({ success: false, message: 'Something broke!' });
 });
 
 app.listen(PORT, () => {

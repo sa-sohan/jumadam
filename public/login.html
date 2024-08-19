@@ -64,9 +64,9 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('error-message');
-
+    
             console.log('Attempting login with:', { username, password: '*'.repeat(password.length) });
-
+    
             fetch('/login', {
                 method: 'POST',
                 headers: {
@@ -77,8 +77,11 @@
             })
             .then(response => {
                 console.log('Response status:', response.status);
-                console.log('Response headers:', response.headers);
-                return response.json().then(data => ({ status: response.status, body: data }));
+                if (response.headers.get('Content-Type').includes('application/json')) {
+                    return response.json().then(data => ({ status: response.status, body: data }));
+                } else {
+                    return response.text().then(text => ({ status: response.status, body: text }));
+                }
             })
             .then(({ status, body }) => {
                 console.log('Login response:', body);
@@ -94,11 +97,12 @@
                 errorMessage.textContent = '로그인 중 오류가 발생했습니다: ' + error.message;
             });
         }
-
+    
         // 페이지 로드 시 콘솔에 로그 추가
         window.onload = function() {
             console.log('Login page loaded');
         }
     </script>
+    
 </body>
 </html>
