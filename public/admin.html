@@ -116,52 +116,58 @@
         }
 
         document.getElementById('download-csv').onclick = function() {
-            fetch('/getAnswers')
-                .then(response => {
-                    if (!response.ok) {
-                        if (response.status === 401) {
-                            window.location.href = '/login.html';
-                            throw new Error('인증이 필요합니다.');
+            fetch('/getAnswers', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = '/login.html';
+                        throw new Error('인증이 필요합니다.');
+                    }
+                    throw new Error('서버 오류: ' + response.status);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (!Array.isArray(data)) {
+                    throw new Error('데이터 형식이 올바르지 않습니다.');
+                }
+                const headers = ['소개팅 신청 여부', '이름', '지역', '출생년도', '성별', '연락처', '연상/연하/동갑', '답변 완료 시각'];
+                const csvContent = [headers.join(',')].concat(data.map(row => 
+                    row.map((cell, index) => {
+                        if (index === 3) { // 출생년도
+                            return `"${formatBirthYear(cell)}"`;
+                        } else if (index === 5) { // 연락처
+                            return `"${formatPhoneNumber(cell)}"`;
+                        } else {
+                            return `"${cell}"`;
                         }
-                        throw new Error('서버 오류');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (!Array.isArray(data)) {
-                        throw new Error('데이터 형식이 올바르지 않습니다.');
-                    }
-                    const headers = ['소개팅 신청 여부', '이름', '지역', '출생년도', '성별', '연락처', '연상/연하/동갑', '답변 완료 시각'];
-                    const csvContent = [headers.join(',')].concat(data.map(row => 
-                        row.map((cell, index) => {
-                            if (index === 3) { // 출생년도
-                                return `"${formatBirthYear(cell)}"`;
-                            } else if (index === 5) { // 연락처
-                                return `"${formatPhoneNumber(cell)}"`;
-                            } else {
-                                return `"${cell}"`;
-                            }
-                        }).join(',')
-                    )).join('\n');
-                    
-                    const encoder = new TextEncoder();
-                    const bom = encoder.encode('\uFEFF');
-                    const csvData = encoder.encode(csvContent);
-                    
-                    const blob = new Blob([bom, csvData], { type: 'text/csv;charset=utf-8;' });
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.style.display = 'none';
-                    a.href = url;
-                    a.download = 'answers.csv';
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('CSV 다운로드 중 오류가 발생했습니다: ' + error.message);
-                });
+                    }).join(',')
+                )).join('\n');
+                
+                const encoder = new TextEncoder();
+                const bom = encoder.encode('\uFEFF');
+                const csvData = encoder.encode(csvContent);
+                
+                const blob = new Blob([bom, csvData], { type: 'text/csv;charset=utf-8;' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = 'answers.csv';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('CSV 다운로드 중 오류가 발생했습니다: ' + error.message);
+            });
         };
 
         document.getElementById('design-change').onclick = function() {
@@ -172,66 +178,76 @@
             window.location.href = 'home_design.html';
         };
 
-        fetch('/getAnswers')
-            .then(response => {
-                if (!response.ok) {
-                    if (response.status === 401) {
-                        window.location.href = '/login.html';
-                        throw new Error('인증이 필요합니다.');
-                    }
-                    throw new Error('서버 오류');
+        fetch('/getAnswers', {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                if (response.status === 401) {
+                    console.log('인증 실패. 로그인 페이지로 이동합니다.');
+                    window.location.href = '/login.html';
+                    throw new Error('인증이 필요합니다.');
                 }
-                return response.json();
-            })
-            .then(data => {
-                if (!Array.isArray(data)) {
-                    console.error('Received data is not an array:', data);
-                    throw new Error('데이터 형식이 올바르지 않습니다.');
-                }
-                const tableBody = document.querySelector('#answers-table tbody');
-                data.forEach((row, index) => {
-                    const tr = document.createElement('tr');
-                    row.forEach((cell, cellIndex) => {
-                        const td = document.createElement('td');
-                        if (cellIndex === 6 && cell === '') {
-                            td.textContent = '미선택';
-                        } else if (cellIndex === 3) { // 출생년도
-                            td.textContent = formatBirthYear(cell);
-                        } else if (cellIndex === 5) { // 연락처
-                            td.textContent = formatPhoneNumber(cell);
-                        } else {
-                            td.textContent = cell;
-                        }
-                        tr.appendChild(td);
-                    });
-                    const deleteButton = document.createElement('button');
-                    deleteButton.textContent = '삭제';
-                    deleteButton.className = 'delete-button';
-                    deleteButton.onclick = function() {
-                        if (confirm('삭제하시겠습니까?')) {
-                            fetch(`/deleteAnswer/${index}`, { method: 'DELETE' })
-                                .then(response => {
-                                    if (!response.ok) {
-                                        throw new Error('삭제 실패');
-                                    }
-                                    tr.remove();
-                                })
-                                .catch(error => {
-                                    console.error('Error:', error);
-                                    alert('삭제에 실패했습니다.');
-                                });
-                        }
-                    };
+                throw new Error('서버 오류: ' + response.status);
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (!Array.isArray(data)) {
+                console.error('Received data is not an array:', data);
+                throw new Error('데이터 형식이 올바르지 않습니다.');
+            }
+            const tableBody = document.querySelector('#answers-table tbody');
+            data.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                row.forEach((cell, cellIndex) => {
                     const td = document.createElement('td');
-                    td.appendChild(deleteButton);
+                    if (cellIndex === 6 && cell === '') {
+                        td.textContent = '미선택';
+                    } else if (cellIndex === 3) { // 출생년도
+                        td.textContent = formatBirthYear(cell);
+                    } else if (cellIndex === 5) { // 연락처
+                        td.textContent = formatPhoneNumber(cell);
+                    } else {
+                        td.textContent = cell;
+                    }
                     tr.appendChild(td);
-                    tableBody.appendChild(tr);
                 });
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('데이터를 불러오는 중 오류가 발생했습니다: ' + error.message);
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = '삭제';
+                deleteButton.className = 'delete-button';
+                deleteButton.onclick = function() {
+                    if (confirm('삭제하시겠습니까?')) {
+                        fetch(`/deleteAnswer/${index}`, { 
+                            method: 'DELETE',
+                            credentials: 'include'
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('삭제 실패');
+                            }
+                            tr.remove();
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('삭제에 실패했습니다.');
+                        });
+                    }
+                };
+                const td = document.createElement('td');
+                td.appendChild(deleteButton);
+                tr.appendChild(td);
+                tableBody.appendChild(tr);
             });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('데이터를 불러오는 중 오류가 발생했습니다: ' + error.message);
+        });
     </script>
 </body>
 </html>
