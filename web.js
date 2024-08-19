@@ -11,6 +11,7 @@ const app = express();
 const PORT = process.env.PORT || 8001;
 
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.use('/uploads', express.static('uploads'));
 
@@ -35,6 +36,12 @@ app.use((req, res, next) => {
     if (req.method === 'OPTIONS') {
         return res.sendStatus(200);
     }
+    next();
+});
+
+// URL을 소문자로 변환하는 미들웨어
+app.use((req, res, next) => {
+    req.url = req.url.toLowerCase();
     next();
 });
 
@@ -140,8 +147,8 @@ app.get('/mbti-questions', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
+    console.log('Login attempt:', req.body);
     const { username, password } = req.body;
-    console.log('Login attempt:', username);
     if (username === auth.username && password === auth.password) {
         req.session.loggedIn = true;
         req.session.save((err) => {
@@ -287,6 +294,7 @@ app.post('/saveMBTIAnswers', async (req, res) => {
         
         const existingAnswers = await readAnswers();
         existingAnswers.push(answers);
+        
         await fs.writeFile('mbti_answers.json', existingAnswers.map(JSON.stringify).join('\n') + '\n');
         
         // MBTI 결과 생성
@@ -427,7 +435,7 @@ function generateMBTIResult(answers) {
         "ENFP": ["로버트 다우니 주니어", "빌 클린턴"],
         "ENTP": ["스티브 워즈니악", "레오나르도 다 빈치"],
         "ESTJ": ["미셸 오바마", "샘 월튼"],
-        "ESFJ": ["테일러 스위프트", "휴 잭맨"],
+"ESFJ": ["테일러 스위프트", "휴 잭맨"],
         "ENFJ": ["버락 오바마", "오프라 윈프리"],
         "ENTJ": ["스티브 발머", "고든 램지"]
     };
@@ -518,6 +526,16 @@ app.get('/logout', (req, res) => {
         }
         res.json({ message: '로그아웃되었습니다.' });
     });
+});
+
+// 오류 처리 미들웨어
+app.use((req, res, next) => {
+    res.status(404).send("Sorry, that route doesn't exist.");
+});
+
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).send('Something broke!');
 });
 
 app.listen(PORT, () => {
