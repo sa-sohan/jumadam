@@ -51,14 +51,24 @@
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ username, password }),
+                credentials: 'include'  // 이 줄을 추가
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Login failed');
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     window.location.href = '/admin.html';
                 } else {
                     alert('아이디 또는 비밀번호가 잘못되었습니다.');
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('로그인 중 오류가 발생했습니다.');
             });
         }
     </script>
