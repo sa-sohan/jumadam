@@ -31,6 +31,10 @@
         button:hover {
             background-color: #0056b3;
         }
+        #error-message {
+            color: red;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -40,10 +44,14 @@
         <input type="password" id="password" placeholder="비밀번호">
         <button onclick="login()">로그인</button>
     </div>
+    <div id="error-message"></div>
     <script>
         function login() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
+            const errorMessage = document.getElementById('error-message');
+
+            console.log('Attempting login with:', { username, password: '*'.repeat(password.length) });
 
             fetch('/login', {
                 method: 'POST',
@@ -51,25 +59,31 @@
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({ username, password }),
-                credentials: 'include'  // 이 줄을 추가
+                credentials: 'include'
             })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Login failed');
-                }
-                return response.json();
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+                return response.json().then(data => ({ status: response.status, body: data }));
             })
-            .then(data => {
-                if (data.success) {
-                    window.location.href = '/admin.html';
+            .then(({ status, body }) => {
+                console.log('Login response:', body);
+                if (status === 200 && body.success) {
+                    console.log('Login successful, redirecting to admin page');
+                    window.location.href = '/admin';
                 } else {
-                    alert('아이디 또는 비밀번호가 잘못되었습니다.');
+                    throw new Error(body.message || '로그인에 실패했습니다.');
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
-                alert('로그인 중 오류가 발생했습니다.');
+                console.error('Login error:', error);
+                errorMessage.textContent = '로그인 중 오류가 발생했습니다: ' + error.message;
             });
+        }
+
+        // 페이지 로드 시 콘솔에 로그 추가
+        window.onload = function() {
+            console.log('Login page loaded');
         }
     </script>
 </body>
